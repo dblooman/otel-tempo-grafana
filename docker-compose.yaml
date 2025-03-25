@@ -9,6 +9,8 @@ services:
       - "3200" # tempo
       - "4317" # otlp grpc
       - "4318" # otlp http
+    networks:
+      - observability
 
   prometheus:
     image: prom/prometheus:latest
@@ -20,6 +22,8 @@ services:
       - ./grafana/prometheus.yaml:/etc/prometheus.yaml
     ports:
       - "9090:9090"
+    networks:
+      - observability
 
   grafana:
     image: grafana/grafana:11.0.0
@@ -32,13 +36,13 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
     ports:
       - "3000:3000"
+    networks:
+      - observability
 
   otel-collector:
     image: otel/opentelemetry-collector:0.94.0
     restart: always
     command: ["--config=/etc/otel-collector-config.yaml"]
-    links:
-      - tempo
     volumes:
       - ./grafana/otel-collector-config.yaml:/etc/otel-collector-config.yaml
     ports:
@@ -51,3 +55,9 @@ services:
     depends_on:
       - tempo
       - prometheus
+    networks:
+      - observability
+
+networks:
+  observability:
+    driver: bridge
